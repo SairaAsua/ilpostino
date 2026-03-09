@@ -1,0 +1,27 @@
+# Entorno virtual
+.venv/
+
+# Variables de entorno y secretos
+.env
+*.env
+
+# Datos de usuarios (privado)
+data/
+sites/
+
+# Logs
+*.log
+/tmp/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Base de datos
+*.db
+*.sqlite
+
+# Sistema
+.DS_Store
