@@ -67,27 +67,16 @@ SERVICE_URL=$(gcloud run services describe "${SERVICE_NAME}" \
   --region "${REGION}" \
   --format "value(status.url)")
 
-echo ""
-echo "✅ Servicio desplegado en: ${SERVICE_URL}"
-
-# ── 6. Configurar webhook de Telegram ─────────────────
-WEBHOOK_URL="${SERVICE_URL}"
-echo "🔗 Configurando webhook de Telegram..."
-curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
-  -d "url=${WEBHOOK_URL}" \
-  -d "drop_pending_updates=true" | python3 -m json.tool
-
-# ── 7. Re-deploy con WEBHOOK_URL ─────────────────────
-echo "🔄 Actualizando con WEBHOOK_URL..."
-gcloud run services update "${SERVICE_NAME}" \
-  --region "${REGION}" \
-  --update-env-vars "WEBHOOK_URL=${WEBHOOK_URL}"
+# ── 6. Asegurarse de que no haya webhook activo (modo polling) ────
+echo "🔗 Eliminando webhook de Telegram (modo polling)..."
+curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteWebhook?drop_pending_updates=true" \
+  | python3 -m json.tool
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ ¡Il Postino Bot está online!"
 echo "   Servicio: ${SERVICE_URL}"
-echo "   Webhook:  ${WEBHOOK_URL}"
+echo "   Modo:     polling (siempre activo)"
 echo "   Bucket:   gs://${BUCKET_NAME}"
 echo ""
 echo "Para ver logs en tiempo real:"
