@@ -22,7 +22,7 @@ def _headers() -> dict:
 
 
 def get_owner() -> str:
-    return os.environ.get("GITHUB_OWNER", "anyprinter001-source")
+    return os.environ.get("GITHUB_OWNER", "ilPostinob0t")
 
 
 def get_repo_name(user_id: str) -> str:
@@ -111,7 +111,7 @@ def _generar_readme(nombre: str, headline: str, bio: str, site_url: str, repo: s
 
 ---
 
-*Este sitio fue creado con [ilPostino](https://github.com/anyprinter001-source) — marca personal viva, actualizable desde Telegram.*
+*Este sitio fue creado con [ilPostino](https://github.com/ilPostinob0t) — marca personal viva, actualizable desde Telegram.*
 """
 
 
@@ -253,7 +253,7 @@ def publish_welcome_blog_post(user_id: str, nombre_usuario: str,
         post_titulo = f"Hola, soy {nombre_corto} 👋"
         post_body = (
             f"<p>Bienvenido/a a mi sitio personal, creado con "
-            f"<a href='https://anyprinter001-source.github.io'>Il Postino Bot</a>.</p>"
+            f"<a href='https://ilPostinob0t.github.io'>Il Postino Bot</a>.</p>"
             f"<p>Acá vas a encontrar mis proyectos, novedades y todo lo que quiera "
             f"compartir con el mundo. ¡Gracias por visitar!</p>"
         )
@@ -297,7 +297,7 @@ def publish_welcome_blog_post(user_id: str, nombre_usuario: str,
     &nbsp;·&nbsp;
     <a href="../#blog">Blog</a>
     &nbsp;·&nbsp;
-    <a href="https://anyprinter001-source.github.io">Il Postino Bot</a>
+    <a href="https://ilPostinob0t.github.io">Il Postino Bot</a>
   </footer>
 </body>
 </html>"""
@@ -344,7 +344,7 @@ def publish_welcome_blog_post(user_id: str, nombre_usuario: str,
   <footer>
     <a href="../">{nombre_usuario}</a>
     &nbsp;·&nbsp;
-    <a href="https://anyprinter001-source.github.io">Il Postino Bot</a>
+    <a href="https://ilPostinob0t.github.io">Il Postino Bot</a>
     &nbsp;·&nbsp;
     <a href="https://cafecito.app/ilpostino">☕ Invitame un café</a>
   </footer>
@@ -432,7 +432,7 @@ def publish_initial_blog_posts(user_id: str, nombre_usuario: str, posts_json: st
     &nbsp;·&nbsp;
     <a href="../#blog">Blog</a>
     &nbsp;·&nbsp;
-    <a href="https://anyprinter001-source.github.io">Il Postino Bot</a>
+    <a href="https://ilPostinob0t.github.io">Il Postino Bot</a>
   </footer>
 </body>
 </html>"""
@@ -493,7 +493,7 @@ def publish_initial_blog_posts(user_id: str, nombre_usuario: str, posts_json: st
   <footer>
     <a href="../">{nombre_usuario}</a>
     &nbsp;·&nbsp;
-    <a href="https://anyprinter001-source.github.io">Il Postino Bot</a>
+    <a href="https://ilPostinob0t.github.io">Il Postino Bot</a>
     &nbsp;·&nbsp;
     <a href="https://cafecito.app/ilpostino">☕ Invitame un café</a>
   </footer>

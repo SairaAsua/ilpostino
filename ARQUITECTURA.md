@@ -204,7 +204,7 @@ ilpostino/
 |----------|-------------|--------------|
 | `GOOGLE_API_KEY` | API key de Google AI Studio para los modelos Gemini | ADK Runner, todos los agentes |
 | `GITHUB_TOKEN` | Personal Access Token de GitHub con permisos `repo` | `github_tools.py`: crear repos, subir archivos |
-| `GITHUB_OWNER` | Usuario u organización de GitHub donde se crean los repos | `github_tools.py`: `get_owner()` → default `anyprinter001-source` |
+| `GITHUB_OWNER` | Usuario u organización de GitHub donde se crean los repos | `github_tools.py`: `get_owner()` → default `ilPostinob0t` |
 | `GITHUB_REPO` | Nombre del repo raíz (referencia histórica, los sitios van en repos individuales `jb-{user_id}`) | `.env` |
 | `GMAIL_USER` | Dirección Gmail desde la que se envían los emails de confirmación | `email_tools.py` |
 | `GMAIL_APP_PASSWORD` | App Password de Gmail (no la contraseña normal, generada en Cuenta Google → Seguridad) | `email_tools.py` |
@@ -315,9 +315,9 @@ tail -f /tmp/ngrok.log
 | `https://{GITHUB_OWNER}.github.io/jb-{user_id}/blog/` | Índice del blog del usuario |
 | `https://{GITHUB_OWNER}.github.io/jb-{user_id}/blog/{timestamp}.html` | Entrada individual de blog |
 
-**Ejemplo real con owner `anyprinter001-source` y user_id `asuasaira`:**
-- Sitio: `https://anyprinter001-source.github.io/jb-asuasaira/`
-- Blog: `https://anyprinter001-source.github.io/jb-asuasaira/blog/`
+**Ejemplo real con owner `ilPostinob0t` y user_id `asuasaira`:**
+- Sitio: `https://ilPostinob0t.github.io/jb-asuasaira/`
+- Blog: `https://ilPostinob0t.github.io/jb-asuasaira/blog/`
 
 ### Telegram
 

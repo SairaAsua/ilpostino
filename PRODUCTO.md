@@ -56,7 +56,7 @@ ilPostino es un sistema de agentes de IA que convierte una conversación de Tele
 
 7. El cliente recibe en Telegram:
    "🎉 ¡Tu sitio está listo!
-    👉 https://anyprinter001-source.github.io/jb-{user_id}/
+    👉 https://ilPostinob0t.github.io/jb-{user_id}/
     También te enviamos un email con el link.
     💡 Tip: Para publicar novedades usá /post"
 

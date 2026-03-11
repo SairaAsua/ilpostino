@@ -49,7 +49,7 @@ def generar_dashboard() -> str:
         nombre = u.get("nombre", "")
         email = u.get("email", "")
         repo = f"jb-{uid.lower().replace('_', '-')}"
-        site_url = f"https://anyprinter001-source.github.io/{repo}/"
+        site_url = f"https://ilPostinob0t.github.io/{repo}/"
         estado = u.get("estado", "publicado")
         fecha_creacion = u.get("fecha_creacion", "—")
         fecha_edicion = u.get("fecha_ultima_edicion", "—")
@@ -72,7 +72,7 @@ def generar_dashboard() -> str:
               {estado}
             </span>
           </td>
-          <td><a href="https://github.com/anyprinter001-source/{repo}" target="_blank">{repo}</a></td>
+          <td><a href="https://github.com/ilPostinob0t/{repo}" target="_blank">{repo}</a></td>
           <td><a href="{site_url}" target="_blank">Ver sitio ↗</a><br>
               <a href="{site_url}blog/" target="_blank" style="font-size:12px;color:#888">Blog ↗</a></td>
           <td style="font-size:12px">{fecha_creacion}</td>

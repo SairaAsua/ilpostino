@@ -124,7 +124,7 @@ function render() {
       <div class="user-name">${u.nombre || u.user_id}</div>
       <div class="user-meta">${u.email || ''}</div>
       <div class="user-meta">ID: ${u.user_id}</div>
-      ${u.user_id ? `<div class="user-meta"><a class="site-link" href="https://anyprinter001-source.github.io/jb-${u.user_id.toLowerCase().replace(/_/g,'-')}/" target="_blank">Ver sitio ↗</a></div>` : ''}
+      ${u.user_id ? `<div class="user-meta"><a class="site-link" href="https://ilPostinob0t.github.io/jb-${u.user_id.toLowerCase().replace(/_/g,'-')}/" target="_blank">Ver sitio ↗</a></div>` : ''}
       ${badge(u.estado || 'publicado')}
     </div>`).join('') || '<div class="empty">Sin usuarios aún</div>';
 

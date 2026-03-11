@@ -13,9 +13,9 @@ El usuario completa un onboarding por chat y en ~10 minutos tiene su sitio onlin
 - **Google Cloud Storage** — persistencia en producción (detectado por `GCS_BUCKET` env var)
 
 ## Estructura de repos de usuarios
-- Owner: `anyprinter001-source`
+- Owner: `ilPostinob0t`
 - Repo: `jb-{user_id}` donde `user_id = email.split("@")[0]` con `.` y `+` → `_`
-- URL: `https://anyprinter001-source.github.io/jb-{user_id}/`
+- URL: `https://ilPostinob0t.github.io/jb-{user_id}/`
 
 ## Variables de entorno requeridas
 ```
@@ -23,7 +23,7 @@ TELEGRAM_BOT_TOKEN
 GOOGLE_API_KEY
 GITHUB_TOKEN
 GCS_BUCKET          # en producción: ilpostino-data-ilpostino-489904
-GITHUB_OWNER        # default: anyprinter001-source
+GITHUB_OWNER        # default: ilPostinob0t
 ```
 
 ## Deploy

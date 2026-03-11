@@ -146,7 +146,7 @@ Si el link es solo un email (contiene @), mostralo como botón de email destacad
 ```html
 <footer>
   <p>[nombre]</p>
-  <p>Este sitio fue creado con <a href="https://anyprinter001-source.github.io">Il Postino Bot</a>.</p>
+  <p>Este sitio fue creado con <a href="https://ilPostinob0t.github.io">Il Postino Bot</a>.</p>
   <p>Una casa digital viva, armada desde conversación.</p>
   <p><a href="https://cafecito.app/ilpostino">☕ Invitame un café</a></p>
 </footer>

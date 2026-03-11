@@ -13,7 +13,7 @@ Datos del cliente:
 - Email: busca el email en {raw_form_data}
 
 URL del sitio: buscá la public_url en el resultado del publisher, o construila como:
-https://anyprinter001-source.github.io/sites/{brief[user_id]}/
+https://ilPostinob0t.github.io/sites/{brief[user_id]}/
 
 Llamá a send_site_ready_email con:
 - recipient_email: el email del cliente
