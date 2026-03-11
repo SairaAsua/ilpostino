@@ -47,12 +47,25 @@ bash deploy-cloudrun.sh
 |---------|--------|-------------|
 | /start | ✅ | Onboarding completo |
 | /nuevo | ✅ | Sitio nuevo desde cero |
-| /post | ✅ | Entrada de blog |
-| /edit | ✅ | Editar vía prompt IA |
-| /nuevaseccion | ✅ | Agregar sección |
-| /eliminar | ✅ | Eliminar contenido |
+| /post | ✅ | Entrada de blog (foto + texto) |
+| /edit | ✅ | Editar texto/estilo/colores vía prompt libre |
+| /nuevaseccion | ✅ | Agregar sección nueva con IA |
+| /eliminar | ✅ | Eliminar secciones o contenido |
 | /panel | ✅ | Dashboard admin (chat_id 2083458641) |
 | /cancelar | ✅ | Cancelar conversación |
+
+## Estilos disponibles en onboarding
+No hay teclado fijo — el usuario recibe 5 combinaciones sugeridas y puede escribir lo que quiera:
+- 🟫 Tierra & Calma (Beige + Terracota, Georgia)
+- 🖤 Noche Digital (Negro + Verde eléctrico, Space Grotesk)
+- 🌸 Rosa Editorial (Blush + Ciruela, Playfair Display)
+- 🌿 Verde Bosque (Crema + Verde musgo, DM Serif)
+- 🔵 Azul Estudio (Blanco + Azul marino, Inter)
+
+## Edición IA (tools/edit_tools.py)
+- Modelo: `gemini-2.0-flash-lite` directo (no ADK)
+- `editar_html()`, `agregar_seccion()`, `eliminar_contenido()`
+- Helper `_aplicar_edicion_html()` en `telegram_bot.py` maneja todo el flujo GitHub
 
 ## Flujo del pipeline de onboarding
 1. `telegram_bot.py` recolecta datos → sube fotos a GitHub antes de pasar al pipeline
@@ -65,5 +78,6 @@ bash deploy-cloudrun.sh
 ## Notas importantes
 - Las fotos de perfil y blog se suben a GitHub ANTES del pipeline para evitar pasar base64 a los agentes (causa 429 o error de Pydantic)
 - El pipeline tiene retry automático en 429 (3 intentos, backoff 60s)
-- Cloud Run corre en polling mode con un health check HTTP en un thread separado
+- Cloud Run corre en **polling mode** + health check HTTP en thread separado (webhook mode falla por timeout de startup)
+- `deploy-cloudrun.sh` NO activa webhook — borra el webhook al final para asegurar polling
 - `tools/cloud_storage.py` detecta entorno por la variable `GCS_BUCKET`
