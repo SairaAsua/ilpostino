@@ -684,7 +684,21 @@ if __name__ == "__main__":
             drop_pending_updates=True,
         )
     else:
-        print("🤖 ilPostino Bot corriendo en @ilpostino_bot (polling)")
-        print("   /start  → crear sitio web")
-        print("   /post   → publicar entrada de blog")
+        # En Cloud Run sin WEBHOOK_URL: polling + health check HTTP en background
+        import threading
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+
+        class HealthHandler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"ok")
+            def log_message(self, *args):
+                pass  # silenciar logs
+
+        def _health_server():
+            HTTPServer(("0.0.0.0", port), HealthHandler).serve_forever()
+
+        threading.Thread(target=_health_server, daemon=True).start()
+        print(f"🤖 ilPostino Bot corriendo en @ilpostino_bot (polling + health:{port})")
         bot.run_polling(drop_pending_updates=True)
