@@ -321,7 +321,7 @@ tail -f /tmp/ngrok.log
 
 ### Telegram
 
-- Bot activo: `@journalBord_bot`
+- Bot activo: `@ilpostino_bot`
 - Comandos disponibles:
   - `/start` — inicia onboarding o muestra el sitio si ya existe
   - `/nuevo` — fuerza un onboarding nuevo

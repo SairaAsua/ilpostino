@@ -23,6 +23,13 @@ class SocialLink(BaseModel):
     url: str
 
 
+class InitialBlogPost(BaseModel):
+    title: str
+    excerpt: str
+    body: str
+    date: str = ""
+
+
 class StructuredBrief(BaseModel):
     user_id: str
     full_name: str
@@ -33,6 +40,7 @@ class StructuredBrief(BaseModel):
     tone: str
     style_keywords: list[str]
     photo_urls: list[str] = []
+    initial_blog_posts: list[InitialBlogPost] = []
 
 
 class DesignTokens(BaseModel):

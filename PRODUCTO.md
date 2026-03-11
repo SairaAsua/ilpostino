@@ -27,7 +27,7 @@ ilPostino es un sistema de agentes de IA que convierte una conversación de Tele
 ## Flujo de experiencia del cliente — Sitio web (/start)
 
 ```
-1. El cliente escribe /start en @journalBord_bot
+1. El cliente escribe /start en @ilpostino_bot
    └─ Si ya tiene sitio: recibe el link directo + instrucciones para /post
    └─ Si es nuevo: comienza onboarding
 

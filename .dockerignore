@@ -1,0 +1,9 @@
+.venv/
+.env
+data/
+sites/
+__pycache__/
+*.pyc
+*.log
+.git/
+.gitignore
