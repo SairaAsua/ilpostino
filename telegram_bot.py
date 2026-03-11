@@ -45,11 +45,25 @@ NOMBRE, EMAIL, BIO, PROYECTOS, LINKS, ESTILO, FOTO, CONFIRMAR = range(8)
 BLOG_PREGUNTA, BLOG_TITULO, BLOG_FOTO_ONBOARDING = range(8, 11)
 # Estados blog post (/post)
 BLOG_FOTO, BLOG_COPY = range(20, 22)
+# Estados edición
+EDITAR_PROMPT = 40
+NUEVA_SECCION_DESC = 41
+ELIMINAR_DESC = 42
 
-ESTILOS = [
-    ["Moderno y minimalista", "Editorial y elegante"],
-    ["Creativo y colorido", "Profesional y sobrio"],
-]
+ESTILO_MSG = """🎨 *¿Cómo querés que se vea tu sitio?*
+
+Podés elegir una de estas combinaciones o escribir lo que quieras:
+
+🟫 *Tierra & Calma* — Beige + Terracota · Georgia
+🖤 *Noche Digital* — Negro + Verde eléctrico · Space Grotesk
+🌸 *Rosa Editorial* — Blush + Ciruela · Playfair Display
+🌿 *Verde Bosque* — Crema + Verde musgo · DM Serif
+🔵 *Azul Estudio* — Blanco + Azul marino · Inter
+
+O describí lo que tenés en mente, por ejemplo:
+_"Fondo negro, textos en dorado, tipografía serif"_
+_"Colores pasteles, estilo japonés minimalista"_
+_"Verde salvia, tipografía moderna sans-serif"_"""
 
 # Mapeo chat_id → user_id (persiste en GCS o disco local)
 _USUARIOS_KEY = "usuarios.json"
@@ -154,9 +168,9 @@ async def recibir_links(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     texto = update.message.text.strip()
     context.user_data["links"] = [l.strip() for l in texto.replace(",", "\n").split("\n") if l.strip()]
     await update.message.reply_text(
-        "Última pregunta 🎨\n\n*¿Cómo querés que se vea tu sitio?*",
+        ESTILO_MSG,
         parse_mode="Markdown",
-        reply_markup=ReplyKeyboardMarkup(ESTILOS, one_time_keyboard=True, resize_keyboard=True),
+        reply_markup=ReplyKeyboardRemove(),
     )
     return ESTILO
 
@@ -392,13 +406,13 @@ async def _lanzar_pipeline(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                         f"_Te enviamos el link también por email._\n\n"
                         f"━━━━━━━━━━━━━━━\n"
                         f"*Comandos para editar tu sitio:*\n\n"
+                        f"✏️ /edit — Editar texto o estilo de cualquier parte\n"
+                        f"➕ /nuevaseccion — Agregar una sección nueva\n"
+                        f"🗑 /eliminar — Eliminar secciones o contenido\n"
                         f"✍️ /post — Publicar una entrada de blog\n"
-                        f"_(mandá una foto + texto y se crea la entrada)_\n\n"
-                        f"🔄 /nuevo — Crear un sitio nuevo desde cero\n\n"
+                        f"🔄 /nuevo — Crear un sitio nuevo desde cero\n"
                         f"❌ /cancelar — Cancelar lo que estés haciendo\n\n"
-                        f"━━━━━━━━━━━━━━━\n"
-                        f"_Próximamente: editar secciones, cambiar fotos, "
-                        f"actualizar proyectos y más, todo desde acá._"
+                        f"━━━━━━━━━━━━━━━"
                     ),
                     parse_mode="Markdown",
                 )
@@ -432,6 +446,181 @@ async def _lanzar_pipeline(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                 await asyncio.sleep(PIPELINE_COOLDOWN_SECONDS)
 
     context.application.create_task(pipeline_y_notificar())
+    return ConversationHandler.END
+
+
+# ─────────────────────────────────────────────
+# EDITAR / NUEVA SECCIÓN / ELIMINAR
+# ─────────────────────────────────────────────
+
+def _check_usuario(update):
+    """Devuelve el usuario o None si no tiene sitio."""
+    return obtener_usuario(update.effective_chat.id)
+
+
+async def _no_tiene_sitio(update):
+    await update.message.reply_text(
+        "Primero necesitás crear tu sitio. Escribí /start 😊"
+    )
+
+
+async def _aplicar_edicion_html(app, chat_id, usuario, fn_edicion, prompt, tipo):
+    """Helper: descarga HTML, aplica fn_edicion, sube resultado."""
+    from tools.edit_tools import obtener_html
+    from tools.github_tools import get_owner, get_repo_name, file_put, get_user_site_url
+
+    user_id = usuario["user_id"]
+    owner = get_owner()
+    repo = get_repo_name(user_id)
+
+    html_actual = obtener_html(owner, repo)
+    if not html_actual:
+        await app.bot.send_message(chat_id=chat_id,
+            text="⚠️ No pude obtener tu sitio. Intentá de nuevo.")
+        return
+
+    html_nuevo = fn_edicion(html_actual, prompt)
+    file_put(owner, repo, "index.html", html_nuevo, f"{tipo}: {prompt[:60]}")
+
+    site_url = get_user_site_url(user_id)
+    registrar_cambio(user_id, tipo, "sitio", prompt[:100])
+    registrar_evento("blog_publicado", user_id, usuario["nombre"],
+                     f"{tipo}: {prompt[:100]}")
+
+    await app.bot.send_message(
+        chat_id=chat_id,
+        text=(
+            f"✅ *¡Listo!*\n\n"
+            f"👉 {site_url}\n\n"
+            f"_Los cambios pueden tardar 1-2 minutos en verse._"
+        ),
+        parse_mode="Markdown",
+    )
+
+
+# /edit ──────────────────────────────────────
+
+async def edit_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    usuario = _check_usuario(update)
+    if not usuario:
+        await _no_tiene_sitio(update)
+        return ConversationHandler.END
+    context.user_data["edit_usuario"] = usuario
+    await update.message.reply_text(
+        "✏️ *¿Qué querés editar?*\n\n"
+        "Describilo con tus palabras. Por ejemplo:\n"
+        "• _Cambiá mi bio por: \"Diseñadora y fotógrafa en CABA\"_\n"
+        "• _Actualizá mi email de contacto_\n"
+        "• _Cambiá el color del título a azul marino_\n"
+        "• _Renombrá la sección Proyectos como Trabajos_",
+        parse_mode="Markdown",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    return EDITAR_PROMPT
+
+
+async def recibir_edit_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    prompt = update.message.text.strip()
+    usuario = context.user_data["edit_usuario"]
+    chat_id = update.effective_chat.id
+    app = context.application
+
+    await update.message.reply_text("🔄 Aplicando cambios con IA...")
+
+    async def _hacer():
+        try:
+            from tools.edit_tools import editar_html
+            await _aplicar_edicion_html(app, chat_id, usuario, editar_html, prompt, "edit")
+        except Exception as e:
+            log.error(f"Error en /edit: {e}")
+            await app.bot.send_message(chat_id=chat_id,
+                text="⚠️ Error aplicando el cambio. Intentá de nuevo.")
+
+    context.application.create_task(_hacer())
+    return ConversationHandler.END
+
+
+# /nuevaseccion ───────────────────────────────
+
+async def nuevaseccion_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    usuario = _check_usuario(update)
+    if not usuario:
+        await _no_tiene_sitio(update)
+        return ConversationHandler.END
+    context.user_data["edit_usuario"] = usuario
+    await update.message.reply_text(
+        "➕ *¿Qué sección querés agregar?*\n\n"
+        "Describí el contenido. Por ejemplo:\n"
+        "• _Una sección de testimonios con 3 frases de clientes_\n"
+        "• _Una galería de fotos de mis últimos trabajos_\n"
+        "• _Una sección de servicios con precios_\n"
+        "• _Un formulario de contacto_",
+        parse_mode="Markdown",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    return NUEVA_SECCION_DESC
+
+
+async def recibir_nuevaseccion_desc(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    prompt = update.message.text.strip()
+    usuario = context.user_data["edit_usuario"]
+    chat_id = update.effective_chat.id
+    app = context.application
+
+    await update.message.reply_text("🔄 Creando la nueva sección...")
+
+    async def _hacer():
+        try:
+            from tools.edit_tools import agregar_seccion
+            await _aplicar_edicion_html(app, chat_id, usuario, agregar_seccion, prompt, "nueva_seccion")
+        except Exception as e:
+            log.error(f"Error en /nuevaseccion: {e}")
+            await app.bot.send_message(chat_id=chat_id,
+                text="⚠️ Error creando la sección. Intentá de nuevo.")
+
+    context.application.create_task(_hacer())
+    return ConversationHandler.END
+
+
+# /eliminar ──────────────────────────────────
+
+async def eliminar_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    usuario = _check_usuario(update)
+    if not usuario:
+        await _no_tiene_sitio(update)
+        return ConversationHandler.END
+    context.user_data["edit_usuario"] = usuario
+    await update.message.reply_text(
+        "🗑 *¿Qué querés eliminar?*\n\n"
+        "Describí qué sacar. Por ejemplo:\n"
+        "• _La sección de proyectos_\n"
+        "• _Mi foto de perfil_\n"
+        "• _El proyecto que dice \"Amapola Studio\"_\n"
+        "• _El link de Instagram_",
+        parse_mode="Markdown",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    return ELIMINAR_DESC
+
+
+async def recibir_eliminar_desc(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    prompt = update.message.text.strip()
+    usuario = context.user_data["edit_usuario"]
+    chat_id = update.effective_chat.id
+    app = context.application
+
+    await update.message.reply_text("🔄 Eliminando el contenido...")
+
+    async def _hacer():
+        try:
+            from tools.edit_tools import eliminar_contenido
+            await _aplicar_edicion_html(app, chat_id, usuario, eliminar_contenido, prompt, "eliminar")
+        except Exception as e:
+            log.error(f"Error en /eliminar: {e}")
+            await app.bot.send_message(chat_id=chat_id,
+                text="⚠️ Error eliminando el contenido. Intentá de nuevo.")
+
+    context.application.create_task(_hacer())
     return ConversationHandler.END
 
 
@@ -658,8 +847,38 @@ def crear_bot(token: str) -> Application:
         fallbacks=[CommandHandler("cancelar", cancelar)],
     )
 
+    # Conversación de edición
+    editar = ConversationHandler(
+        entry_points=[CommandHandler("edit", edit_start)],
+        states={
+            EDITAR_PROMPT: [MessageHandler(filters.TEXT & ~filters.COMMAND, recibir_edit_prompt)],
+        },
+        fallbacks=[CommandHandler("cancelar", cancelar)],
+    )
+
+    # Conversación nueva sección
+    nueva_seccion = ConversationHandler(
+        entry_points=[CommandHandler("nuevaseccion", nuevaseccion_start)],
+        states={
+            NUEVA_SECCION_DESC: [MessageHandler(filters.TEXT & ~filters.COMMAND, recibir_nuevaseccion_desc)],
+        },
+        fallbacks=[CommandHandler("cancelar", cancelar)],
+    )
+
+    # Conversación eliminar
+    eliminar = ConversationHandler(
+        entry_points=[CommandHandler("eliminar", eliminar_start)],
+        states={
+            ELIMINAR_DESC: [MessageHandler(filters.TEXT & ~filters.COMMAND, recibir_eliminar_desc)],
+        },
+        fallbacks=[CommandHandler("cancelar", cancelar)],
+    )
+
     app.add_handler(onboarding)
     app.add_handler(blog)
+    app.add_handler(editar)
+    app.add_handler(nueva_seccion)
+    app.add_handler(eliminar)
     app.add_handler(CommandHandler("panel", panel))
     return app
 
