@@ -800,6 +800,89 @@ async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 # ─────────────────────────────────────────────
+# HANDLER: MENSAJES LIBRES (intención automática)
+# ─────────────────────────────────────────────
+
+async def _detectar_intencion(texto: str) -> str:
+    """Usa Gemini para clasificar la intención del mensaje. Devuelve: post | editar | nueva_seccion | eliminar | nuevo | otro."""
+    import google.generativeai as genai
+    genai.configure(api_key=os.environ.get("GOOGLE_API_KEY", ""))
+    model = genai.GenerativeModel("gemini-2.0-flash-lite")
+    prompt = f"""Clasificá el siguiente mensaje de un usuario de un bot que gestiona sitios web personales.
+Respondé SOLO con una de estas palabras (sin puntuación, sin explicación):
+- post → quiere publicar una entrada de blog, una novedad, algo que pasó, un proyecto terminado
+- editar → quiere cambiar algo existente en su sitio (colores, texto, bio, links, tipografía, estilo)
+- nueva_seccion → quiere agregar una sección nueva a su sitio
+- eliminar → quiere eliminar algo de su sitio
+- nuevo → quiere crear un sitio web desde cero
+- otro → no encaja en ninguna de las anteriores
+
+Mensaje: "{texto}"
+Respuesta:"""
+    try:
+        resp = model.generate_content(prompt)
+        intencion = resp.text.strip().lower().split()[0]
+        if intencion in ("post", "editar", "nueva_seccion", "eliminar", "nuevo"):
+            return intencion
+    except Exception as e:
+        log.warning(f"Error detectando intención: {e}")
+    return "otro"
+
+
+async def mensaje_libre(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Detecta la intención del mensaje y ejecuta el flujo correspondiente sin preguntar de nuevo."""
+    texto = update.message.text.strip()
+    chat_id = update.effective_chat.id
+    usuario = obtener_usuario(chat_id)
+
+    intencion = await _detectar_intencion(texto)
+
+    if intencion == "nuevo":
+        await nuevo(update, context)
+        return
+
+    if intencion in ("post", "editar", "nueva_seccion", "eliminar"):
+        if not usuario:
+            await _no_tiene_sitio(update)
+            return
+
+    if intencion == "post":
+        context.user_data["blog_usuario"] = usuario
+        context.user_data["blog_tiene_foto"] = False
+        context.user_data["blog_foto_b64"] = ""
+        # Simulamos el update.message.text para recibir_copy_blog
+        await update.message.reply_text("📝 Publicando eso en tu blog...")
+        # Llamamos directamente al procesador con el texto ya disponible
+        await recibir_copy_blog(update, context)
+
+    elif intencion == "editar":
+        context.user_data["edit_usuario"] = usuario
+        await update.message.reply_text("✏️ Aplicando el cambio...")
+        await recibir_edit_prompt(update, context)
+
+    elif intencion == "nueva_seccion":
+        context.user_data["edit_usuario"] = usuario
+        await update.message.reply_text("➕ Creando la sección...")
+        await recibir_nuevaseccion_desc(update, context)
+
+    elif intencion == "eliminar":
+        context.user_data["edit_usuario"] = usuario
+        await update.message.reply_text("🗑 Eliminando el contenido...")
+        await recibir_eliminar_desc(update, context)
+
+    else:
+        await update.message.reply_text(
+            "✉️ *Il Postino* — ¿Qué querés hacer?\n\n"
+            "• /post — publicar una entrada en tu blog\n"
+            "• /edit — editar algo de tu sitio\n"
+            "• /nuevaseccion — agregar una sección nueva\n"
+            "• /eliminar — sacar algo del sitio\n"
+            "• /nuevo — crear un sitio desde cero",
+            parse_mode="Markdown",
+        )
+
+
+# ─────────────────────────────────────────────
 # APP
 # ─────────────────────────────────────────────
 
@@ -880,6 +963,8 @@ def crear_bot(token: str) -> Application:
     app.add_handler(nueva_seccion)
     app.add_handler(eliminar)
     app.add_handler(CommandHandler("panel", panel))
+    # Fallback: mensajes libres fuera de cualquier conversación
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, mensaje_libre))
     return app
 
 
